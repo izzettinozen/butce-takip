@@ -1,0 +1,21 @@
+# Netlify yapılandırması — Bütçe Takip
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Next.js (App Router, SSR) yönlendirmesini yöneten resmi eklenti.
+# Bu eklenti SSR/route yönlendirmesini otomatik yaptığı için ayrıca
+# manuel bir SPA fallback redirect'ine gerek yoktur (uygulama SPA değil).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Güvenlik başlıkları — tüm yollar için
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'self'; base-uri 'self'; form-action 'self';"
