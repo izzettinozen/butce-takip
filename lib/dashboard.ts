@@ -33,6 +33,16 @@ export const GRAFIK_PALETI = [
 export const RENK_GELIR = "#10b981";
 export const RENK_GIDER = "#ef4444";
 
+/**
+ * Bir gider türü adının "Yatırım" olup olmadığını belirler.
+ * Türkçe yerel ayarla harf duyarsız karşılaştırır — "Yatırım",
+ * "yatırım", "YATIRIM" hepsi eşit sayılır.
+ * İleride birden fazla isme genişletilebilir.
+ */
+export function isInvestmentTuru(turAdi: string): boolean {
+  return turAdi.trim().toLocaleLowerCase("tr-TR") === "yatırım";
+}
+
 /** Verilen yıl/ay'ın bir önceki ayını döndürür (date-fns ile). */
 export function oncekiAy(yil: number, ay: number): { yil: number; ay: number } {
   const d = subMonths(new Date(yil, ay - 1, 1), 1);

@@ -6,8 +6,13 @@ import { Banknote, PiggyBank, Receipt, Wallet } from "lucide-react";
 
 import { useDashboard, type DashGider } from "@/hooks/use-dashboard";
 import { useDonemler } from "@/hooks/use-donemler";
-import { KISA_AYLAR, oncekiAy, trendYuzdesi } from "@/lib/dashboard";
-import { AY_ADLARI, formatCurrency, formatPercent } from "@/lib/format";
+import {
+  isInvestmentTuru,
+  KISA_AYLAR,
+  oncekiAy,
+  trendYuzdesi,
+} from "@/lib/dashboard";
+import { AY_ADLARI, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
@@ -105,66 +110,78 @@ export default function DashboardPage() {
   const gelirler = useMemo(() => data?.gelirler ?? [], [data]);
   const hedefler = useMemo(() => data?.hedefler ?? [], [data]);
 
+  // Yatırım = adı "Yatırım" olan gider türü. Saf gider = yatırım dışı giderler.
+  const safGiderler = useMemo(
+    () => giderler.filter((g) => !isInvestmentTuru(g.giderTuru)),
+    [giderler],
+  );
+  const yatirimGiderler = useMemo(
+    () => giderler.filter((g) => isInvestmentTuru(g.giderTuru)),
+    [giderler],
+  );
+
   /* ---- KPI hesaplamaları (aylık veya yıllık kapsam) ---- */
   const kpi = useMemo(() => {
-    const hesapla = (gelir: number, gider: number) => {
-      const net = gelir - gider;
-      return { gelir, gider, net, oran: gelir > 0 ? (net / gelir) * 100 : null };
-    };
-
-    // Bu dönem ve önceki dönem toplamları.
-    const bu =
+    // Seçili kapsama göre (aylık/yıllık) dönem toplamı.
+    const donemToplam = (
+      rows: { yil: number; ay: number; tutar: number }[],
+      yil: number,
+      ay: number,
+    ) =>
       kpiMode === "yillik"
-        ? hesapla(
-            yillikTutar(gelirler, effectiveYear),
-            yillikTutar(giderler, effectiveYear),
-          )
-        : hesapla(
-            aylikTutar(gelirler, effectiveYear, selectedMonth),
-            aylikTutar(giderler, effectiveYear, selectedMonth),
-          );
+        ? yillikTutar(rows, yil)
+        : aylikTutar(rows, yil, ay);
 
-    const gecen =
+    const onceki =
       kpiMode === "yillik"
-        ? hesapla(
-            yillikTutar(gelirler, effectiveYear - 1),
-            yillikTutar(giderler, effectiveYear - 1),
-          )
-        : (() => {
-            const o = oncekiAy(effectiveYear, selectedMonth);
-            return hesapla(
-              aylikTutar(gelirler, o.yil, o.ay),
-              aylikTutar(giderler, o.yil, o.ay),
-            );
-          })();
+        ? { yil: effectiveYear - 1, ay: selectedMonth }
+        : oncekiAy(effectiveYear, selectedMonth);
+
+    const buGelir = donemToplam(gelirler, effectiveYear, selectedMonth);
+    const buSafGider = donemToplam(safGiderler, effectiveYear, selectedMonth);
+    const buYatirim = donemToplam(
+      yatirimGiderler,
+      effectiveYear,
+      selectedMonth,
+    );
+    const buNetBirikim = buGelir - buSafGider - buYatirim;
+
+    const gecenGelir = donemToplam(gelirler, onceki.yil, onceki.ay);
+    const gecenSafGider = donemToplam(safGiderler, onceki.yil, onceki.ay);
+    const gecenYatirim = donemToplam(yatirimGiderler, onceki.yil, onceki.ay);
+    const gecenNetBirikim = gecenGelir - gecenSafGider - gecenYatirim;
 
     return {
-      buGelir: bu.gelir,
-      buGider: bu.gider,
-      buNet: bu.net,
-      buOran: bu.oran,
-      gelirTrend: trendYuzdesi(bu.gelir, gecen.gelir),
-      giderTrend: trendYuzdesi(bu.gider, gecen.gider),
-      netTrend: trendYuzdesi(bu.net, gecen.net),
-      oranTrend:
-        bu.oran !== null && gecen.oran !== null
-          ? trendYuzdesi(bu.oran, gecen.oran)
-          : null,
+      buGelir,
+      buSafGider,
+      buYatirim,
+      buNetBirikim,
+      gelirTrend: trendYuzdesi(buGelir, gecenGelir),
+      safGiderTrend: trendYuzdesi(buSafGider, gecenSafGider),
+      yatirimTrend: trendYuzdesi(buYatirim, gecenYatirim),
+      netBirikimTrend: trendYuzdesi(buNetBirikim, gecenNetBirikim),
     };
-  }, [giderler, gelirler, effectiveYear, selectedMonth, kpiMode]);
+  }, [
+    gelirler,
+    safGiderler,
+    yatirimGiderler,
+    effectiveYear,
+    selectedMonth,
+    kpiMode,
+  ]);
 
-  /* ---- Grafik 1: Seçili yılın 12 ayı (Ocak-Aralık) ---- */
+  /* ---- Grafik 1: Seçili yılın 12 ayı (gider = saf gider, yatırım hariç) ---- */
   const trendData = useMemo(
     () =>
       KISA_AYLAR.map((ad, i) => ({
         ay: ad,
         gelir: aylikTutar(gelirler, effectiveYear, i + 1),
-        gider: aylikTutar(giderler, effectiveYear, i + 1),
+        gider: aylikTutar(safGiderler, effectiveYear, i + 1),
       })),
-    [giderler, gelirler, effectiveYear],
+    [safGiderler, gelirler, effectiveYear],
   );
 
-  /* ---- Seçili ay giderleri ---- */
+  /* ---- Seçili ay giderleri (tümü — bütçe hedefi karşılaştırması için) ---- */
   const ayGiderleri = useMemo(
     () =>
       giderler.filter(
@@ -173,18 +190,24 @@ export default function DashboardPage() {
     [giderler, effectiveYear, selectedMonth],
   );
 
-  /* ---- Grafik 2: Gider türü dağılımı ---- */
-  const giderTuruData = useMemo(
-    () =>
-      gruplaTopla(ayGiderleri, (g) => g.giderTuru).sort(
-        (a, b) => b.value - a.value,
-      ),
+  /* ---- Seçili ay saf giderleri (gider grafikleri için — yatırım hariç) ---- */
+  const aySafGiderler = useMemo(
+    () => ayGiderleri.filter((g) => !isInvestmentTuru(g.giderTuru)),
     [ayGiderleri],
   );
 
-  /* ---- Grafik 3: Ödeme türü dağılımı (Nakit / Kredi Kartı / Diğer) ---- */
+  /* ---- Grafik 2: Gider türü dağılımı (yatırım türü hariç) ---- */
+  const giderTuruData = useMemo(
+    () =>
+      gruplaTopla(aySafGiderler, (g) => g.giderTuru).sort(
+        (a, b) => b.value - a.value,
+      ),
+    [aySafGiderler],
+  );
+
+  /* ---- Grafik 3: Ödeme türü dağılımı (saf giderler — yatırım hariç) ---- */
   const odemeData = useMemo(() => {
-    const tumu = gruplaTopla(ayGiderleri, (g) => g.odemeTuru);
+    const tumu = gruplaTopla(aySafGiderler, (g) => g.odemeTuru);
     const ana: { name: string; value: number }[] = [];
     let diger = 0;
     for (const o of tumu) {
@@ -193,7 +216,7 @@ export default function DashboardPage() {
     }
     if (diger > 0) ana.push({ name: "Diğer", value: diger });
     return ana.sort((a, b) => b.value - a.value);
-  }, [ayGiderleri]);
+  }, [aySafGiderler]);
 
   /* ---- Grafik 4: Bütçe hedefi vs gerçekleşen ---- */
   const butceData = useMemo(() => {
@@ -209,28 +232,29 @@ export default function DashboardPage() {
       }));
   }, [hedefler, selectedDonem, ayGiderleri]);
 
-  /* ---- Grafik 5: En çok harcanan 5 kalem ---- */
+  /* ---- Grafik 5: En çok harcanan 5 kalem (saf giderler — yatırım hariç) ---- */
   const topKalemler = useMemo(
     () =>
-      gruplaTopla(ayGiderleri, (g) => g.giderKalemi)
+      gruplaTopla(aySafGiderler, (g) => g.giderKalemi)
         .sort((a, b) => b.value - a.value)
         .slice(0, 5)
         .map((k) => ({ kalem: k.name, tutar: k.value })),
-    [ayGiderleri],
+    [aySafGiderler],
   );
 
   /* ---- Grafik 6: Yıllık kümülatif birikim ---- */
+  /* Birikim = Gelir - Saf Gider. Yatırım gider sayılmaz, birikim sayılır. */
   const birikimData = useMemo(() => {
-    const aylikNet = KISA_AYLAR.map(
+    const aylikBirikim = KISA_AYLAR.map(
       (_, i) =>
         aylikTutar(gelirler, effectiveYear, i + 1) -
-        aylikTutar(giderler, effectiveYear, i + 1),
+        aylikTutar(safGiderler, effectiveYear, i + 1),
     );
     return KISA_AYLAR.map((ad, i) => ({
       ay: ad,
-      birikim: aylikNet.slice(0, i + 1).reduce((s, n) => s + n, 0),
+      birikim: aylikBirikim.slice(0, i + 1).reduce((s, n) => s + n, 0),
     }));
-  }, [giderler, gelirler, effectiveYear]);
+  }, [safGiderler, gelirler, effectiveYear]);
 
   /* ---- Boş durum bayrakları ---- */
   const trendBos = trendData.every((d) => d.gelir === 0 && d.gider === 0);
@@ -325,29 +349,31 @@ export default function DashboardPage() {
               trendLabel={kpiTrendLabel}
             />
             <KpiCard
-              title="Toplam Gider"
-              value={formatCurrency(kpi.buGider)}
+              title="Saf Gider"
+              value={formatCurrency(kpi.buSafGider)}
               icon={Receipt}
-              trend={kpi.giderTrend}
+              trend={kpi.safGiderTrend}
+              trendLabel={kpiTrendLabel}
+              tooltip="Yatırım hariç giderler"
+              iconClassName="bg-destructive/15 text-destructive"
+            />
+            <KpiCard
+              title="Yatırım"
+              value={formatCurrency(kpi.buYatirim)}
+              icon={PiggyBank}
+              trend={kpi.yatirimTrend}
               trendLabel={kpiTrendLabel}
             />
             <KpiCard
-              title="Net Durum"
-              value={formatCurrency(kpi.buNet)}
+              title="Net Birikim"
+              value={formatCurrency(kpi.buNetBirikim)}
               icon={Wallet}
-              trend={kpi.netTrend}
+              trend={kpi.netBirikimTrend}
               trendLabel={kpiTrendLabel}
               valueClassName={cn(
-                kpi.buNet > 0 && "text-success",
-                kpi.buNet < 0 && "text-destructive",
+                kpi.buNetBirikim > 0 && "text-success",
+                kpi.buNetBirikim < 0 && "text-warning",
               )}
-            />
-            <KpiCard
-              title="Tasarruf Oranı"
-              value={kpi.buOran === null ? "N/A" : formatPercent(kpi.buOran)}
-              icon={PiggyBank}
-              trend={kpi.oranTrend}
-              trendLabel={kpiTrendLabel}
             />
           </div>
 

@@ -4,7 +4,9 @@
       "Bash(npm run *)",
       "Bash(npx --yes shadcn@latest add alert-dialog -y)",
       "Bash(npx --yes shadcn@latest add textarea -y)",
-      "Bash(node -e \"console.log\\(require\\('./node_modules/@tanstack/react-table/package.json'\\).version\\)\")"
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@tanstack/react-table/package.json'\\).version\\)\")",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
