@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -12,6 +10,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -47,9 +46,12 @@ export interface KalemNoktasi {
   kalem: string;
   tutar: number;
 }
-export interface BirikimNoktasi {
+export interface YatirimNoktasi {
+  /** Kısa ay adı (Oca, Şub…) — X ekseni. */
   ay: string;
-  birikim: number;
+  /** Tam ay adı (Ocak, Şubat…) — tooltip. */
+  ayTam: string;
+  tutar: number;
 }
 
 /* ---------------------------------------------------------------- *
@@ -374,63 +376,112 @@ export function TopKalemlerBarChart({ data }: { data: KalemNoktasi[] }) {
 }
 
 /* ---------------------------------------------------------------- *
- * 6. Yıllık Birikim Trendi (alan, işarete göre renkli)
+ * 6. Aylık Yatırım Tutarı (çizgi + yıllık ortalama referans çizgisi)
  * ---------------------------------------------------------------- */
 
-function gradientOffset(data: BirikimNoktasi[]): number {
-  const degerler = data.map((d) => d.birikim);
-  const max = Math.max(...degerler);
-  const min = Math.min(...degerler);
-  if (max <= 0) return 0;
-  if (min >= 0) return 1;
-  return max / (max - min);
+interface YatirimTooltipProps {
+  active?: boolean;
+  payload?: { payload?: YatirimNoktasi }[];
+  ortalama?: number;
+  yil?: number;
 }
 
-export function BirikimAreaChart({ data }: { data: BirikimNoktasi[] }) {
-  const off = gradientOffset(data);
+/** Aylık yatırım tooltip'i: ay + tutar + ortalamadan fark. */
+function YatirimTooltip({
+  active,
+  payload,
+  ortalama = 0,
+  yil,
+}: YatirimTooltipProps) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  if (!d) return null;
+  const fark = d.tutar - ortalama;
   return (
-    <div className="h-72 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-          <defs>
-            <linearGradient id="birikimDolgu" x1="0" y1="0" x2="0" y2="1">
-              <stop offset={off} stopColor={RENK_GELIR} stopOpacity={0.35} />
-              <stop offset={off} stopColor={RENK_GIDER} stopOpacity={0.35} />
-            </linearGradient>
-            <linearGradient id="birikimCizgi" x1="0" y1="0" x2="0" y2="1">
-              <stop offset={off} stopColor={RENK_GELIR} />
-              <stop offset={off} stopColor={RENK_GIDER} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={false}
-            stroke="var(--border)"
+    <div className="bg-popover rounded-lg border px-3 py-2 text-sm shadow-md">
+      <p className="font-medium">
+        {d.ayTam} {yil}
+      </p>
+      <p className="text-foreground">{formatCurrency(d.tutar)}</p>
+      <p className="text-muted-foreground text-xs">
+        ortalamadan {fark >= 0 ? "+" : ""}
+        {formatCurrency(fark)}
+      </p>
+    </div>
+  );
+}
+
+export function AylikYatirimChart({
+  data,
+  ortalama,
+  yil,
+}: {
+  data: YatirimNoktasi[];
+  ortalama: number;
+  yil: number;
+}) {
+  return (
+    <div className="space-y-3">
+      {/* Özel legend */}
+      <div className="flex flex-wrap items-center gap-4 text-xs">
+        <span className="flex items-center gap-1.5">
+          <span
+            className="h-0.5 w-5 rounded"
+            style={{ background: "#8b5cf6" }}
           />
-          <XAxis
-            dataKey="ay"
-            tick={eksenTick}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={eksenTick}
-            tickLine={false}
-            axisLine={false}
-            width={56}
-            tickFormatter={(v: number) => kompaktFormat.format(v)}
-          />
-          <Tooltip content={<ParaTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="birikim"
-            name="Kümülatif Birikim"
-            stroke="url(#birikimCizgi)"
-            strokeWidth={2.5}
-            fill="url(#birikimDolgu)"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+          Aylık Yatırım
+        </span>
+        <span className="text-muted-foreground flex items-center gap-1.5">
+          <span className="border-muted-foreground/60 w-5 border-t-2 border-dashed" />
+          Yıllık ortalama: {formatCurrency(ortalama)}
+        </span>
+      </div>
+
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={data}
+            margin={{ top: 8, right: 12, bottom: 0, left: 8 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="var(--border)"
+            />
+            <XAxis
+              dataKey="ay"
+              tick={eksenTick}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              tick={eksenTick}
+              tickLine={false}
+              axisLine={false}
+              width={56}
+              tickFormatter={(v: number) => kompaktFormat.format(v)}
+            />
+            <Tooltip
+              content={<YatirimTooltip ortalama={ortalama} yil={yil} />}
+            />
+            <ReferenceLine
+              y={ortalama}
+              stroke="var(--muted-foreground)"
+              strokeDasharray="5 4"
+              strokeOpacity={0.7}
+            />
+            <Line
+              type="monotone"
+              dataKey="tutar"
+              name="Aylık Yatırım"
+              stroke="#8b5cf6"
+              strokeWidth={2.5}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

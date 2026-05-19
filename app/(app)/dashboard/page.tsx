@@ -17,7 +17,7 @@ import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import {
-  BirikimAreaChart,
+  AylikYatirimChart,
   ButceBarChart,
   GelirGiderTrendChart,
   GiderTuruDonutChart,
@@ -246,23 +246,25 @@ export default function DashboardPage() {
     [aySafGiderler],
   );
 
-  /* ---- Grafik 6: Yıllık kümülatif birikim ---- */
-  /* Birikim = Gelir - Saf Gider. Yatırım gider sayılmaz, birikim sayılır. */
-  const birikimData = useMemo(() => {
-    const aylikBirikim = KISA_AYLAR.map(
-      (_, i) =>
-        aylikTutar(gelirler, effectiveYear, i + 1) -
-        aylikTutar(safGiderler, effectiveYear, i + 1),
-    );
-    return KISA_AYLAR.map((ad, i) => ({
-      ay: ad,
-      birikim: aylikBirikim.slice(0, i + 1).reduce((s, n) => s + n, 0),
-    }));
-  }, [safGiderler, gelirler, effectiveYear]);
+  /* ---- Grafik 6: Aylık yatırım tutarı (12 ay, kümülatif değil) ---- */
+  const yatirimData = useMemo(
+    () =>
+      KISA_AYLAR.map((kisaAd, i) => ({
+        ay: kisaAd,
+        ayTam: AY_ADLARI[i],
+        tutar: aylikTutar(yatirimGiderler, effectiveYear, i + 1),
+      })),
+    [yatirimGiderler, effectiveYear],
+  );
 
-  /* ---- Boş durum bayrakları ---- */
+  /* Yıllık ortalama = toplam yatırım / 12 (basit). */
+  const yatirimOrtalama = useMemo(
+    () => yatirimData.reduce((s, d) => s + d.tutar, 0) / 12,
+    [yatirimData],
+  );
+
+  /* ---- Boş durum bayrağı ---- */
   const trendBos = trendData.every((d) => d.gelir === 0 && d.gider === 0);
-  const birikimBos = birikimData.every((d) => d.birikim === 0);
 
   const kpiTrendLabel =
     kpiMode === "yillik" ? "geçen yıla göre" : "geçen aya göre";
@@ -451,13 +453,14 @@ export default function DashboardPage() {
             {/* 6 — tam genişlik */}
             <div className="lg:col-span-2">
               <ChartCard
-                title="Yıllık Birikim Trendi"
-                description={`${effectiveYear} · kümülatif net`}
-                isEmpty={birikimBos}
-                emptyMessage="Bu yıl kayıtlı gelir veya gider yok."
-                emptyAction={giderlerLinki}
+                title="Aylık Yatırım Tutarı"
+                description={String(effectiveYear)}
               >
-                <BirikimAreaChart data={birikimData} />
+                <AylikYatirimChart
+                  data={yatirimData}
+                  ortalama={yatirimOrtalama}
+                  yil={effectiveYear}
+                />
               </ChartCard>
             </div>
           </div>
