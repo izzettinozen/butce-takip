@@ -25,15 +25,16 @@ export interface GiderInput {
   donem_id: string;
 }
 
-/** Bir yıla ait gider kaydı (matris hesabı için). */
+/** Bir yıla ait gider kaydı (tür/kalem aylık matrisleri için). */
 export interface YillikGider {
   giderTuruId: string;
+  giderKalemiId: string;
   yil: number;
   ay: number;
   tutar: number;
 }
 
-/** Bir yıla ait tüm giderleri (tür/ay matrisi için) getirir. */
+/** Bir yıla ait tüm giderleri (tür/kalem aylık matrisi için) getirir. */
 export function useGiderlerYillik(yil: number) {
   return useQuery({
     queryKey: [...giderlerKey, "yillik", yil],
@@ -41,12 +42,13 @@ export function useGiderlerYillik(yil: number) {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("giderler")
-        .select("gider_turu_id, tutar, donemler(yil, ay)");
+        .select("gider_turu_id, gider_kalemi_id, tutar, donemler(yil, ay)");
       if (error) throw error;
       return data
         .filter((g) => g.donemler?.yil === yil)
         .map((g) => ({
           giderTuruId: g.gider_turu_id,
+          giderKalemiId: g.gider_kalemi_id,
           yil: g.donemler!.yil,
           ay: g.donemler!.ay,
           tutar: Number(g.tutar),
