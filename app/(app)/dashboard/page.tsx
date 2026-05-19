@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Banknote, PiggyBank, Receipt, Wallet } from "lucide-react";
+import { Banknote, Percent, PiggyBank, Receipt } from "lucide-react";
 
 import { useDashboard, type DashGider } from "@/hooks/use-dashboard";
 import { useDonemler } from "@/hooks/use-donemler";
@@ -12,8 +12,7 @@ import {
   oncekiAy,
   trendYuzdesi,
 } from "@/lib/dashboard";
-import { AY_ADLARI, formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { AY_ADLARI, formatCurrency, formatPercent } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { ChartCard } from "@/components/dashboard/chart-card";
@@ -144,22 +143,27 @@ export default function DashboardPage() {
       effectiveYear,
       selectedMonth,
     );
-    const buNetBirikim = buGelir - buSafGider - buYatirim;
+    // Tasarruf oranı = Yatırım / Gelir × 100. Gelir 0 ise %0.
+    const buTasarrufOrani = buGelir > 0 ? (buYatirim / buGelir) * 100 : 0;
 
     const gecenGelir = donemToplam(gelirler, onceki.yil, onceki.ay);
     const gecenSafGider = donemToplam(safGiderler, onceki.yil, onceki.ay);
     const gecenYatirim = donemToplam(yatirimGiderler, onceki.yil, onceki.ay);
-    const gecenNetBirikim = gecenGelir - gecenSafGider - gecenYatirim;
+    // Geçen dönemde gelir yoksa oran kıyaslaması yapılamaz.
+    const gecenOran =
+      gecenGelir > 0 ? (gecenYatirim / gecenGelir) * 100 : null;
 
     return {
       buGelir,
       buSafGider,
       buYatirim,
-      buNetBirikim,
+      buTasarrufOrani,
       gelirTrend: trendYuzdesi(buGelir, gecenGelir),
       safGiderTrend: trendYuzdesi(buSafGider, gecenSafGider),
       yatirimTrend: trendYuzdesi(buYatirim, gecenYatirim),
-      netBirikimTrend: trendYuzdesi(buNetBirikim, gecenNetBirikim),
+      // Puan farkı: bu dönem oranı − geçen dönem oranı.
+      tasarrufTrend:
+        gecenOran !== null ? buTasarrufOrani - gecenOran : null,
     };
   }, [
     gelirler,
@@ -365,15 +369,19 @@ export default function DashboardPage() {
               trendLabel={kpiTrendLabel}
             />
             <KpiCard
-              title="Net Birikim"
-              value={formatCurrency(kpi.buNetBirikim)}
-              icon={Wallet}
-              trend={kpi.netBirikimTrend}
+              title="Tasarruf Oranı"
+              value={formatPercent(kpi.buTasarrufOrani)}
+              icon={Percent}
+              trend={kpi.tasarrufTrend}
+              trendBirim="puan"
               trendLabel={kpiTrendLabel}
-              valueClassName={cn(
-                kpi.buNetBirikim > 0 && "text-success",
-                kpi.buNetBirikim < 0 && "text-warning",
-              )}
+              valueClassName={
+                kpi.buTasarrufOrani >= 20
+                  ? "text-success"
+                  : kpi.buTasarrufOrani >= 10
+                    ? "text-warning"
+                    : "text-destructive"
+              }
             />
           </div>
 

@@ -17,6 +17,8 @@ interface KpiCardProps {
   trend: number | null;
   /** Trend göstergesinin altındaki açıklama (örn. "geçen aya göre"). */
   trendLabel?: string;
+  /** Trend değerinin birimi: yüzde değişim ("%5,0") veya puan farkı ("+5,0 puan"). */
+  trendBirim?: "yuzde" | "puan";
   /** Ana değere uygulanacak ek renk sınıfı (net durum için). */
   valueClassName?: string;
   /** İkon kutusuna uygulanacak sınıf. Verilmezse mavi-mor gradient. */
@@ -32,6 +34,7 @@ export function KpiCard({
   icon: Icon,
   trend,
   trendLabel = "geçen aya göre",
+  trendBirim = "yuzde",
   valueClassName,
   iconClassName,
   tooltip,
@@ -67,7 +70,11 @@ export function KpiCard({
             ) : (
               <TrendingDown className="size-3.5" />
             )}
-            %{Math.abs(trend).toFixed(1).replace(".", ",")}
+            {trendBirim === "puan"
+              ? `${trend >= 0 ? "+" : "-"}${Math.abs(trend)
+                  .toFixed(1)
+                  .replace(".", ",")} puan`
+              : `%${Math.abs(trend).toFixed(1).replace(".", ",")}`}
           </span>
         )}
       </div>
