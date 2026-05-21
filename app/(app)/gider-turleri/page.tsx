@@ -1,7 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Pencil,
+  Plus,
+  Tags,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -56,6 +64,24 @@ interface MatrisSatiri {
   yillikToplam: number;
 }
 
+/** Sıralama durumu. Alan: "ad" | "yillik" | "ay-1" … "ay-12". */
+interface SiraDurumu {
+  alan: string;
+  artan: boolean;
+}
+
+/** Sütun başlığına aktif/pasif sıralama oku. */
+function siralaIkonu(id: string, sort: SiraDurumu) {
+  if (sort.alan !== id) {
+    return <ArrowUpDown className="size-3.5 opacity-40" />;
+  }
+  return sort.artan ? (
+    <ArrowUp className="size-3.5" />
+  ) : (
+    <ArrowDown className="size-3.5" />
+  );
+}
+
 export default function GiderTurleriPage() {
   const [currentYear] = useState(() => new Date().getFullYear());
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -63,6 +89,18 @@ export default function GiderTurleriPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<GiderTuru | null>(null);
   const [deleting, setDeleting] = useState<GiderTuru | null>(null);
+  // Sıralama: varsayılan Gider Türü A-Z.
+  const [sort, setSort] = useState<SiraDurumu>({
+    alan: "ad",
+    artan: true,
+  });
+
+  /** Sütun başlığına tıklayınca sırala (aynı sütun toggle, farklı → azalan). */
+  function sirala(alan: string) {
+    setSort((s) =>
+      s.alan === alan ? { alan, artan: !s.artan } : { alan, artan: false },
+    );
+  }
 
   const {
     data: giderTurleri,
@@ -124,6 +162,26 @@ export default function GiderTurleriPage() {
       };
     });
   }, [giderTurleri, giderlerYillik, hedeflerYillik]);
+
+  // Sıralanmış matris (Toplam satırı sıralamaya dahil değil).
+  const siralanmis = useMemo(() => {
+    const kopya = [...matris];
+    kopya.sort((a, b) => {
+      let fark = 0;
+      if (sort.alan === "ad") {
+        fark = a.tur.name.localeCompare(b.tur.name, "tr-TR");
+      } else if (sort.alan === "yillik") {
+        fark = a.yillikToplam - b.yillikToplam;
+      } else if (sort.alan.startsWith("ay-")) {
+        const ay = Number(sort.alan.slice(3));
+        const av = a.aylar[ay - 1]?.gerceklesen ?? 0;
+        const bv = b.aylar[ay - 1]?.gerceklesen ?? 0;
+        fark = av - bv;
+      }
+      return sort.artan ? fark : -fark;
+    });
+    return kopya;
+  }, [matris, sort]);
 
   // Aylık genel toplamlar (footer).
   const ayToplamlari = useMemo(() => {
@@ -225,20 +283,46 @@ export default function GiderTurleriPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="sticky left-0 bg-card">
-                    Gider Türü
+                  <TableHead className="bg-card sticky left-0">
+                    <button
+                      type="button"
+                      onClick={() => sirala("ad")}
+                      className="hover:text-foreground inline-flex w-full items-center gap-1.5"
+                    >
+                      Gider Türü
+                      {siralaIkonu("ad", sort)}
+                    </button>
                   </TableHead>
-                  {KISA_AYLAR.map((ad) => (
-                    <TableHead key={ad} className="text-right">
-                      {ad}
-                    </TableHead>
-                  ))}
-                  <TableHead className="text-right">Yıllık Toplam</TableHead>
+                  {KISA_AYLAR.map((ad, i) => {
+                    const id = `ay-${i + 1}`;
+                    return (
+                      <TableHead key={ad} className="text-right">
+                        <button
+                          type="button"
+                          onClick={() => sirala(id)}
+                          className="hover:text-foreground inline-flex w-full flex-row-reverse items-center gap-1.5"
+                        >
+                          {ad}
+                          {siralaIkonu(id, sort)}
+                        </button>
+                      </TableHead>
+                    );
+                  })}
+                  <TableHead className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => sirala("yillik")}
+                      className="hover:text-foreground inline-flex w-full flex-row-reverse items-center gap-1.5"
+                    >
+                      Yıllık Toplam
+                      {siralaIkonu("yillik", sort)}
+                    </button>
+                  </TableHead>
                   <TableHead className="text-right">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {matris.map((satir) => (
+                {siralanmis.map((satir) => (
                   <TableRow key={satir.tur.id}>
                     <TableCell className="bg-card sticky left-0 font-medium">
                       {satir.tur.name}
