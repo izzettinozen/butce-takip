@@ -16,8 +16,10 @@ export const config = {
      * - _next/static (statik dosyalar)
      * - _next/image (görsel optimizasyonu)
      * - favicon.ico
-     * - resim uzantılı dosyalar
+     * - PWA public dosyaları: manifest.webmanifest, sw.js, offline.html
+     *   (giriş yapılmadan da erişilebilmeli)
+     * - resim uzantılı dosyalar (icons/*.png, *.svg vb.)
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
