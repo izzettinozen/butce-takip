@@ -62,11 +62,24 @@ export const navGroups: NavGroup[] = [
 /** Tüm navigasyon öğelerinin düz listesi. */
 export const allNavItems: NavItem[] = navGroups.flatMap((g) => g.items);
 
-/** Alt mobil menüde gösterilecek öncelikli öğeler. */
+/** Alt mobil çubuğun ilk 4 hızlı öğesi (5. buton "Menü"dür). */
 export const primaryNavItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Giderler", href: "/giderler", icon: Receipt },
   { title: "Gelirler", href: "/gelirler", icon: TrendingUp },
   { title: "Raporlar", href: "/raporlar", icon: BarChart3 },
-  { title: "Ayarlar", href: "/ayarlar", icon: Settings },
+];
+
+/**
+ * Mobil "Menü" bottom sheet'inin içeriği — alt çubuğa sığmayan
+ * sayfalar. Tanımlar/Planlama navGroups'tan türetilir, Ayarlar
+ * ayrı "Diğer" grubunda.
+ */
+export const bottomSheetGroups: NavGroup[] = [
+  navGroups.find((g) => g.label === "Tanımlar")!,
+  navGroups.find((g) => g.label === "Planlama")!,
+  {
+    label: "Diğer",
+    items: [{ title: "Ayarlar", href: "/ayarlar", icon: Settings }],
+  },
 ];
