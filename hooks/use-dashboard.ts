@@ -12,6 +12,8 @@ export interface DashGider {
   donemId: string;
   giderTuru: string;
   giderTuruId: string;
+  /** Türün is_investment kolonu (isInvestmentTuru helper'ı bunu okur). */
+  is_investment: boolean;
   giderKalemi: string;
   odemeTuru: string;
 }
@@ -52,7 +54,7 @@ export function useDashboard() {
         supabase
           .from("giderler")
           .select(
-            "tutar, donem_id, gider_turu_id, gider_turleri(name), gider_kalemleri(name), odeme_turleri(name), donemler(yil, ay)",
+            "tutar, donem_id, gider_turu_id, gider_turleri(name, is_investment), gider_kalemleri(name), odeme_turleri(name), donemler(yil, ay)",
           ),
         supabase
           .from("gelirler")
@@ -73,6 +75,7 @@ export function useDashboard() {
         donemId: g.donem_id,
         giderTuru: g.gider_turleri?.name ?? "—",
         giderTuruId: g.gider_turu_id,
+        is_investment: g.gider_turleri?.is_investment ?? false,
         giderKalemi: g.gider_kalemleri?.name ?? "—",
         odemeTuru: g.odeme_turleri?.name ?? "—",
       }));

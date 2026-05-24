@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { createClient } from "@/lib/supabase/client";
 import { getUserId } from "@/lib/auth";
+import { dashboardKey } from "@/hooks/use-dashboard";
 import type { GiderTuru } from "@/types/database";
 
 export const giderTurleriKey = ["gider_turleri"] as const;
@@ -26,34 +27,50 @@ export function useGiderTurleri() {
 export function useCreateGiderTuru() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (name: string) => {
+    mutationFn: async ({
+      name,
+      is_investment,
+    }: {
+      name: string;
+      is_investment: boolean;
+    }) => {
       const supabase = createClient();
       const user_id = await getUserId();
       const { error } = await supabase
         .from("gider_turleri")
-        .insert({ user_id, name: name.trim() });
+        .insert({ user_id, name: name.trim(), is_investment });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: giderTurleriKey });
+      queryClient.invalidateQueries({ queryKey: dashboardKey });
     },
   });
 }
 
-/** Gider türünü günceller. */
+/** Gider türünü günceller (ad ve/veya is_investment). */
 export function useUpdateGiderTuru() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+    mutationFn: async ({
+      id,
+      name,
+      is_investment,
+    }: {
+      id: string;
+      name: string;
+      is_investment: boolean;
+    }) => {
       const supabase = createClient();
       const { error } = await supabase
         .from("gider_turleri")
-        .update({ name: name.trim() })
+        .update({ name: name.trim(), is_investment })
         .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: giderTurleriKey });
+      queryClient.invalidateQueries({ queryKey: dashboardKey });
     },
   });
 }
@@ -72,6 +89,7 @@ export function useDeleteGiderTuru() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: giderTurleriKey });
+      queryClient.invalidateQueries({ queryKey: dashboardKey });
     },
   });
 }

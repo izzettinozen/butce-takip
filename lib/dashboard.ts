@@ -34,13 +34,14 @@ export const RENK_GELIR = "#10b981";
 export const RENK_GIDER = "#ef4444";
 
 /**
- * Bir gider türü adının "Yatırım" olup olmadığını belirler.
- * Türkçe yerel ayarla harf duyarsız karşılaştırır — "Yatırım",
- * "yatırım", "YATIRIM" hepsi eşit sayılır.
- * İleride birden fazla isme genişletilebilir.
+ * Bir gider türünün tasarruf/yatırım sayılıp sayılmayacağını belirler.
+ * Veritabanındaki `is_investment` boolean kolonuna bakar.
+ * Birden fazla yatırım türü olabilir (Altın, BES, Acil Fon vb.).
  */
-export function isInvestmentTuru(turAdi: string): boolean {
-  return turAdi.trim().toLocaleLowerCase("tr-TR") === "yatırım";
+export function isInvestmentTuru(giderTuru: {
+  is_investment: boolean;
+}): boolean {
+  return giderTuru.is_investment === true;
 }
 
 /** Verilen yıl/ay'ın bir önceki ayını döndürür (date-fns ile). */

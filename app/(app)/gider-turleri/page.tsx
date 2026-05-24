@@ -28,6 +28,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { GiderTuruDialog } from "@/components/gider-turleri/gider-turu-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -325,7 +326,14 @@ export default function GiderTurleriPage() {
                 {siralanmis.map((satir) => (
                   <TableRow key={satir.tur.id}>
                     <TableCell className="bg-card sticky left-0 font-medium">
-                      {satir.tur.name}
+                      <span className="inline-flex items-center gap-2">
+                        {satir.tur.name}
+                        {satir.tur.is_investment && (
+                          <Badge className="bg-accent text-accent-foreground border-transparent text-[10px] font-medium">
+                            Tasarruf
+                          </Badge>
+                        )}
+                      </span>
                     </TableCell>
                     {satir.aylar.map((hucre) => (
                       <MatrisHucre

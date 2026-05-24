@@ -109,13 +109,14 @@ export default function DashboardPage() {
   const gelirler = useMemo(() => data?.gelirler ?? [], [data]);
   const hedefler = useMemo(() => data?.hedefler ?? [], [data]);
 
-  // Yatırım = adı "Yatırım" olan gider türü. Saf gider = yatırım dışı giderler.
+  // Yatırım = is_investment=true olan tür(ler). Birden fazla olabilir
+  // (Altın, BES, Acil Fon vb.). Saf gider = yatırım olmayan giderler.
   const safGiderler = useMemo(
-    () => giderler.filter((g) => !isInvestmentTuru(g.giderTuru)),
+    () => giderler.filter((g) => !isInvestmentTuru(g)),
     [giderler],
   );
   const yatirimGiderler = useMemo(
-    () => giderler.filter((g) => isInvestmentTuru(g.giderTuru)),
+    () => giderler.filter((g) => isInvestmentTuru(g)),
     [giderler],
   );
 
@@ -196,7 +197,7 @@ export default function DashboardPage() {
 
   /* ---- Seçili ay saf giderleri (gider grafikleri için — yatırım hariç) ---- */
   const aySafGiderler = useMemo(
-    () => ayGiderleri.filter((g) => !isInvestmentTuru(g.giderTuru)),
+    () => ayGiderleri.filter((g) => !isInvestmentTuru(g)),
     [ayGiderleri],
   );
 

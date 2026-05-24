@@ -44,18 +44,21 @@ export type Database = {
           id: string;
           user_id: string;
           name: string;
+          is_investment: boolean;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
           name: string;
+          is_investment?: boolean;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
           name?: string;
+          is_investment?: boolean;
           created_at?: string;
         };
         Relationships: [
