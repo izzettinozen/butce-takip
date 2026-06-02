@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Database, Lock, Palette, Trash2, User } from "lucide-react";
+import { Database, Eye, Lock, Palette, Trash2, User } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
 import { ProfilBolumu } from "@/components/ayarlar/profil-bolumu";
 import { SifreBolumu } from "@/components/ayarlar/sifre-bolumu";
 import { GorunumBolumu } from "@/components/ayarlar/gorunum-bolumu";
+import { GorunumTercihiBolumu } from "@/components/ayarlar/gorunum-tercihi-bolumu";
 import { VeriBolumu } from "@/components/ayarlar/veri-bolumu";
 import { HesapBolumu } from "@/components/ayarlar/hesap-bolumu";
 import {
@@ -22,6 +23,7 @@ const BOLUMLER = [
   { id: "profil", label: "Profil", icon: User },
   { id: "sifre", label: "Şifre Değiştir", icon: Lock },
   { id: "gorunum", label: "Görünüm", icon: Palette },
+  { id: "gorunum-tercihi", label: "Görünüm Tercihi", icon: Eye },
   { id: "veri", label: "Verilerimi İndir", icon: Database },
   { id: "hesap", label: "Hesabı Sil", icon: Trash2 },
 ] as const;
@@ -91,6 +93,7 @@ export default function AyarlarPage() {
           {bolum === "profil" && <ProfilBolumu />}
           {bolum === "sifre" && <SifreBolumu />}
           {bolum === "gorunum" && <GorunumBolumu />}
+          {bolum === "gorunum-tercihi" && <GorunumTercihiBolumu />}
           {bolum === "veri" && <VeriBolumu />}
           {bolum === "hesap" && <HesapBolumu />}
         </div>

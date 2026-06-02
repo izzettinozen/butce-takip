@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Banknote, Percent, PiggyBank, Receipt } from "lucide-react";
+import { Banknote, Percent, PiggyBank, Receipt, Wallet } from "lucide-react";
 
 import { useDashboard, type DashGider } from "@/hooks/use-dashboard";
 import { useDonemler } from "@/hooks/use-donemler";
+import { useProfile } from "@/hooks/use-profile";
 import {
   isInvestmentTuru,
   KISA_AYLAR,
@@ -82,8 +83,12 @@ export default function DashboardPage() {
 
   const { data: donemler, isLoading: donemlerLoading } = useDonemler();
   const { data, isLoading: dashLoading, isError } = useDashboard();
+  const { data: profil, isLoading: profilLoading } = useProfile();
 
-  const loading = donemlerLoading || dashLoading;
+  // Yatırım modu tercihi — yüklenene kadar varsayılan (savings).
+  const investmentMode = profil?.dashboardInvestmentMode ?? "savings";
+
+  const loading = donemlerLoading || dashLoading || profilLoading;
 
   // Mevcut yıllar.
   const yillar = useMemo(() => {
@@ -144,8 +149,10 @@ export default function DashboardPage() {
       effectiveYear,
       selectedMonth,
     );
-    // Tasarruf oranı = Yatırım / Gelir × 100. Gelir 0 ise %0.
+    // Mod 'savings' için: Tasarruf oranı = Yatırım / Gelir × 100. Gelir 0 ise %0.
     const buTasarrufOrani = buGelir > 0 ? (buYatirim / buGelir) * 100 : 0;
+    // Mod 'expense' için: Net Birikim = Gelir − Saf Gider − Yatırım.
+    const buNetBirikim = buGelir - buSafGider - buYatirim;
 
     const gecenGelir = donemToplam(gelirler, onceki.yil, onceki.ay);
     const gecenSafGider = donemToplam(safGiderler, onceki.yil, onceki.ay);
@@ -153,18 +160,22 @@ export default function DashboardPage() {
     // Geçen dönemde gelir yoksa oran kıyaslaması yapılamaz.
     const gecenOran =
       gecenGelir > 0 ? (gecenYatirim / gecenGelir) * 100 : null;
+    const gecenNetBirikim = gecenGelir - gecenSafGider - gecenYatirim;
 
     return {
       buGelir,
       buSafGider,
       buYatirim,
       buTasarrufOrani,
+      buNetBirikim,
       gelirTrend: trendYuzdesi(buGelir, gecenGelir),
       safGiderTrend: trendYuzdesi(buSafGider, gecenSafGider),
       yatirimTrend: trendYuzdesi(buYatirim, gecenYatirim),
-      // Puan farkı: bu dönem oranı − geçen dönem oranı.
+      // Tasarruf Oranı: puan farkı (bu oran − geçen oran).
       tasarrufTrend:
         gecenOran !== null ? buTasarrufOrani - gecenOran : null,
+      // Net Birikim: yüzde değişim.
+      netBirikimTrend: trendYuzdesi(buNetBirikim, gecenNetBirikim),
     };
   }, [
     gelirler,
@@ -371,21 +382,40 @@ export default function DashboardPage() {
               trend={kpi.yatirimTrend}
               trendLabel={kpiTrendLabel}
             />
-            <KpiCard
-              title="Tasarruf Oranı"
-              value={formatPercent(kpi.buTasarrufOrani)}
-              icon={Percent}
-              trend={kpi.tasarrufTrend}
-              trendBirim="puan"
-              trendLabel={kpiTrendLabel}
-              valueClassName={
-                kpi.buTasarrufOrani >= 20
-                  ? "text-success"
-                  : kpi.buTasarrufOrani >= 10
-                    ? "text-warning"
-                    : "text-destructive"
-              }
-            />
+            {investmentMode === "savings" ? (
+              <KpiCard
+                title="Tasarruf Oranı"
+                value={formatPercent(kpi.buTasarrufOrani)}
+                icon={Percent}
+                trend={kpi.tasarrufTrend}
+                trendBirim="puan"
+                trendLabel={kpiTrendLabel}
+                tooltip="Birikim = Gelir − Saf Gider (yatırım dahil)"
+                valueClassName={
+                  kpi.buTasarrufOrani >= 20
+                    ? "text-success"
+                    : kpi.buTasarrufOrani >= 10
+                      ? "text-warning"
+                      : "text-destructive"
+                }
+              />
+            ) : (
+              <KpiCard
+                title="Net Birikim"
+                value={formatCurrency(kpi.buNetBirikim)}
+                icon={Wallet}
+                trend={kpi.netBirikimTrend}
+                trendLabel={kpiTrendLabel}
+                tooltip="Net Birikim = Gelir − Saf Gider − Yatırım (yatırım gider sayılır)"
+                valueClassName={
+                  kpi.buNetBirikim > 0
+                    ? "text-success"
+                    : kpi.buNetBirikim < 0
+                      ? "text-warning"
+                      : undefined
+                }
+              />
+            )}
           </div>
 
           {/* Grafikler */}

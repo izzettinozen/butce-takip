@@ -34,6 +34,13 @@ export const RENK_GELIR = "#10b981";
 export const RENK_GIDER = "#ef4444";
 
 /**
+ * Dashboard'da yatırımın nasıl yorumlanacağı (profil tercihi).
+ *  - "savings": yatırım = birikim → 4. KPI = Tasarruf Oranı
+ *  - "expense": yatırım = gider → 4. KPI = Net Birikim
+ */
+export type DashboardInvestmentMode = "savings" | "expense";
+
+/**
  * Bir gider türünün tasarruf/yatırım sayılıp sayılmayacağını belirler.
  * Veritabanındaki `is_investment` boolean kolonuna bakar.
  * Birden fazla yatırım türü olabilir (Altın, BES, Acil Fon vb.).

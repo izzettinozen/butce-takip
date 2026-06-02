@@ -60,10 +60,20 @@ export function ProfilBolumu() {
     const mesajlar: string[] = [];
     try {
       if (values.fullName.trim() !== profil.fullName) {
+        // UPSERT: satır yoksa oluşturur (handle_new_user trigger'ı atlamış
+        // kullanıcılar için sessiz başarısızlığı önler).
         const { error } = await supabase
           .from("profiles")
-          .update({ full_name: values.fullName.trim() })
-          .eq("id", profil.id);
+          .upsert(
+            {
+              id: profil.id,
+              email: profil.email,
+              full_name: values.fullName.trim(),
+            },
+            { onConflict: "id" },
+          )
+          .select()
+          .single();
         if (error) throw error;
         mesajlar.push("Ad soyad güncellendi");
       }
