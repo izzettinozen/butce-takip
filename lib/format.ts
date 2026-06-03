@@ -108,3 +108,33 @@ export function parseCurrency(value: string): number {
   const num = Number(normalized);
   return Number.isNaN(num) ? 0 : num;
 }
+
+/**
+ * Miktar/adet metnini sayıya çevirir (8 ondalığa kadar, kripto için).
+ * Hem virgül hem nokta ondalık ayıracını kabul eder:
+ *   - Her ikisi varsa nokta binlik, virgül ondalık sayılır ("1.234,5" → 1234.5)
+ *   - Yalnızca virgül varsa ondalık sayılır ("0,04" → 0.04)
+ *   - Yalnızca nokta varsa ondalık sayılır ("1.5" → 1.5)
+ */
+export function parseAdet(value: string): number {
+  let s = value.trim().replace(/\s/g, "");
+  if (s.includes(",") && s.includes(".")) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (s.includes(",")) {
+    s = s.replace(",", ".");
+  }
+  const num = Number(s);
+  return Number.isNaN(num) ? 0 : num;
+}
+
+/**
+ * Miktar/adet değerini TR formatında biçimlendirir (8 ondalığa kadar,
+ * gereksiz sondaki sıfırlar atılır). Örn: 0.04 → "0,04", 1.5 → "1,5"
+ */
+export function formatAdet(value: number | string | null | undefined): string {
+  const num = typeof value === "string" ? Number(value) : (value ?? 0);
+  if (Number.isNaN(num)) return "0";
+  return new Intl.NumberFormat("tr-TR", {
+    maximumFractionDigits: 8,
+  }).format(num);
+}

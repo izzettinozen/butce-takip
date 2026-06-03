@@ -7,6 +7,7 @@ import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useProfile, profileKey } from "@/hooks/use-profile";
+import { bekleyenNakitKey } from "@/hooks/use-bekleyen-nakit";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseErrorMessage } from "@/lib/errors";
 import type { DashboardInvestmentMode } from "@/lib/dashboard";
@@ -34,14 +35,14 @@ const SECENEKLER: SecenekTanim[] = [
     value: "savings",
     baslik: "Tasarruf olarak",
     aciklama:
-      "Yatırım = birikim. Dashboard'da 'Tasarruf Oranı' gösterilir, ay sonu kalan bakiyenin yatırıma gittiği varsayılır.",
+      "Yatırım = birikim. Bekleyen nakit hesabı: Gelir − Saf Gider üzerinden hesaplanır. Ay sonu kalan bakiye de yatırım havuzunuzda sayılır.",
     onerilen: true,
   },
   {
     value: "expense",
     baslik: "Gider olarak",
     aciklama:
-      "Yatırım = harcanmış para. Dashboard'da 'Net Birikim' gösterilir, yatırım yapıldıktan sonra kalan tutar hesaplanır.",
+      "Yatırım = gider. Bekleyen nakit hesabı: Sadece 'Yatırım' işaretli gider türlerinden hesaplanır. Ay sonu kalan bakiye harcanabilir kabul edilir.",
   },
 ];
 
@@ -84,8 +85,11 @@ export function GorunumTercihiBolumu() {
         .single();
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: profileKey });
+      // Bekleyen nakit hesaplaması moda bağlıdır → yeniden hesaplansın.
+      queryClient.invalidateQueries({ queryKey: bekleyenNakitKey });
       setUserSelection(null); // profil tazeleninceye kadar görünen profile'dan gelsin
       toast.success("Görünüm tercihi kaydedildi", {
+        description: "Bekleyen nakit hesaplaması güncellendi.",
         action: {
           label: "Dashboard'a git",
           onClick: () => router.push("/dashboard"),
