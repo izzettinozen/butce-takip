@@ -462,6 +462,142 @@ export type Database = {
           },
         ];
       };
+
+      yatirim_araclari: {
+        Row: {
+          id: string;
+          user_id: string;
+          ad: string;
+          tip: "birim_bazli" | "tutar_bazli";
+          birim: string | null;
+          guncel_fiyat: number;
+          aktif: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          ad: string;
+          tip: "birim_bazli" | "tutar_bazli";
+          birim?: string | null;
+          guncel_fiyat: number;
+          aktif?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          ad?: string;
+          tip?: "birim_bazli" | "tutar_bazli";
+          birim?: string | null;
+          guncel_fiyat?: number;
+          aktif?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "yatirim_araclari_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      yatirim_arac_fiyat_gecmisi: {
+        Row: {
+          id: string;
+          arac_id: string;
+          fiyat: number;
+          kayit_tarihi: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          arac_id: string;
+          fiyat: number;
+          kayit_tarihi: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          arac_id?: string;
+          fiyat?: number;
+          kayit_tarihi?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "yatirim_arac_fiyat_gecmisi_arac_id_fkey";
+            columns: ["arac_id"];
+            isOneToOne: false;
+            referencedRelation: "yatirim_araclari";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      yatirim_islemleri: {
+        Row: {
+          id: string;
+          user_id: string;
+          tarih: string;
+          tip: "alis" | "satis" | "cekme";
+          arac_id: string | null;
+          birim_fiyat: number | null;
+          adet: number | null;
+          tutar: number;
+          aciklama: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          tarih: string;
+          tip: "alis" | "satis" | "cekme";
+          arac_id?: string | null;
+          birim_fiyat?: number | null;
+          adet?: number | null;
+          tutar: number;
+          aciklama?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          tarih?: string;
+          tip?: "alis" | "satis" | "cekme";
+          arac_id?: string | null;
+          birim_fiyat?: number | null;
+          adet?: number | null;
+          tutar?: number;
+          aciklama?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "yatirim_islemleri_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "yatirim_islemleri_arac_id_fkey";
+            columns: ["arac_id"];
+            isOneToOne: false;
+            referencedRelation: "yatirim_araclari";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -504,3 +640,12 @@ export type Gider = Tables<"giderler">;
 export type Gelir = Tables<"gelirler">;
 export type ButceHedefi = Tables<"butce_hedefleri">;
 export type TekrarlayanGider = Tables<"tekrarlayan_giderler">;
+export type YatirimArac = Tables<"yatirim_araclari">;
+export type YatirimAracFiyatGecmisi = Tables<"yatirim_arac_fiyat_gecmisi">;
+export type YatirimIslem = Tables<"yatirim_islemleri">;
+
+/** Yatırım aracı tipi: birim bazlı (gram, USD, adet) veya tutar bazlı (toplam TL). */
+export type YatirimAracTip = "birim_bazli" | "tutar_bazli";
+
+/** Yatırım işlem tipi: alış / satış / çekme. */
+export type YatirimIslemTip = "alis" | "satis" | "cekme";

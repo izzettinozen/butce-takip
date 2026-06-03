@@ -10,6 +10,9 @@ import {
   Target,
   Repeat,
   BarChart3,
+  PieChart,
+  ArrowLeftRight,
+  Coins,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -47,6 +50,18 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Yatırım",
+    items: [
+      { title: "Yatırım Portföyü", href: "/yatirim-portfoyu", icon: PieChart },
+      {
+        title: "Yatırım İşlemleri",
+        href: "/yatirim-islemleri",
+        icon: ArrowLeftRight,
+      },
+      { title: "Yatırım Araçları", href: "/yatirim-araclari", icon: Coins },
+    ],
+  },
+  {
     label: "Planlama",
     items: [
       { title: "Bütçe Hedefleri", href: "/butce-hedefleri", icon: Target },
@@ -76,6 +91,7 @@ export const primaryNavItems: NavItem[] = [
  * ayrı "Diğer" grubunda.
  */
 export const bottomSheetGroups: NavGroup[] = [
+  navGroups.find((g) => g.label === "Yatırım")!,
   navGroups.find((g) => g.label === "Tanımlar")!,
   navGroups.find((g) => g.label === "Planlama")!,
   {
