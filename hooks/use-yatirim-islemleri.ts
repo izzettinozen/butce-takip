@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getUserId } from "@/lib/auth";
 import { yatirimAracOzetleriKey } from "@/hooks/use-yatirim-araclari";
 import { bekleyenNakitKey } from "@/hooks/use-bekleyen-nakit";
+import { portfoyKey } from "@/hooks/use-portfoy";
 import type {
   YatirimAracTip,
   YatirimIslem,
@@ -64,6 +65,8 @@ function invalidateIslemQueries(
   queryClient.invalidateQueries({ queryKey: yatirimAracOzetleriKey });
   // Bekleyen nakit alış/satış/çekme'den etkilenir
   queryClient.invalidateQueries({ queryKey: bekleyenNakitKey });
+  // Portföy özeti + trend (KPI'lar, tablo, grafikler)
+  queryClient.invalidateQueries({ queryKey: portfoyKey });
 }
 
 /** Yeni yatırım işlemi ekler. */

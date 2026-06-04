@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { getUserId } from "@/lib/auth";
 import { netMiktarHesapla } from "@/lib/yatirim";
+import { portfoyKey } from "@/hooks/use-portfoy";
 import type {
   TablesUpdate,
   YatirimArac,
@@ -102,6 +103,8 @@ export function useCreateYatirimArac() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: yatirimAraclariKey });
+      // Portföy özeti + trend araç fiyat/varlık değişiminden etkilenir
+      queryClient.invalidateQueries({ queryKey: portfoyKey });
     },
   });
 }
@@ -144,6 +147,8 @@ export function useUpdateYatirimArac() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: yatirimAraclariKey });
+      // Portföy özeti + trend araç fiyat/varlık değişiminden etkilenir
+      queryClient.invalidateQueries({ queryKey: portfoyKey });
     },
   });
 }
@@ -168,6 +173,8 @@ export function useUpdateYatirimAracFiyat() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: yatirimAraclariKey });
+      // Portföy özeti + trend araç fiyat/varlık değişiminden etkilenir
+      queryClient.invalidateQueries({ queryKey: portfoyKey });
     },
   });
 }
@@ -186,6 +193,8 @@ export function useToggleYatirimAracAktif() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: yatirimAraclariKey });
+      // Portföy özeti + trend araç fiyat/varlık değişiminden etkilenir
+      queryClient.invalidateQueries({ queryKey: portfoyKey });
     },
   });
 }
@@ -208,6 +217,8 @@ export function useDeleteYatirimArac() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: yatirimAraclariKey });
+      // Portföy özeti + trend araç fiyat/varlık değişiminden etkilenir
+      queryClient.invalidateQueries({ queryKey: portfoyKey });
     },
   });
 }

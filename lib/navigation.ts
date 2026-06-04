@@ -13,6 +13,7 @@ import {
   PieChart,
   ArrowLeftRight,
   Coins,
+  PiggyBank,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -82,7 +83,7 @@ export const primaryNavItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Giderler", href: "/giderler", icon: Receipt },
   { title: "Gelirler", href: "/gelirler", icon: TrendingUp },
-  { title: "Raporlar", href: "/raporlar", icon: BarChart3 },
+  { title: "Yatırım", href: "/yatirim-portfoyu", icon: PiggyBank },
 ];
 
 /**
@@ -91,6 +92,11 @@ export const primaryNavItems: NavItem[] = [
  * ayrı "Diğer" grubunda.
  */
 export const bottomSheetGroups: NavGroup[] = [
+  // Raporlar alt çubuktan kaldırıldı (yerine Yatırım geldi) → Menü'ye taşındı.
+  {
+    label: "Genel",
+    items: [{ title: "Raporlar", href: "/raporlar", icon: BarChart3 }],
+  },
   navGroups.find((g) => g.label === "Yatırım")!,
   navGroups.find((g) => g.label === "Tanımlar")!,
   navGroups.find((g) => g.label === "Planlama")!,

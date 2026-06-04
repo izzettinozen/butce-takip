@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeftRight, Coins, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -62,17 +62,29 @@ function TipBadge({ tip }: { tip: YatirimIslemTip }) {
 }
 
 export default function YatirimIslemleriPage() {
+  // useSearchParams Suspense sınırı gerektirir (Next 16).
+  return (
+    <Suspense fallback={null}>
+      <YatirimIslemleriIcerik />
+    </Suspense>
+  );
+}
+
+function YatirimIslemleriIcerik() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<YatirimIslemRow | null>(null);
   const [deleting, setDeleting] = useState<YatirimIslemRow | null>(null);
 
-  // Filtreler
+  // Filtreler — araç filtresi ?arac=<id> ile önseçilebilir (Portföy tablosundan).
   const [baslangic, setBaslangic] = useState("");
   const [bitis, setBitis] = useState("");
   const [tipFiltre, setTipFiltre] = useState<YatirimIslemTip | "hepsi">("hepsi");
-  const [aracFiltre, setAracFiltre] = useState<string>("hepsi");
+  const [aracFiltre, setAracFiltre] = useState<string>(
+    () => searchParams.get("arac") ?? "hepsi",
+  );
 
   const { data: araclar } = useYatirimAraclari();
   const {
