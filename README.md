@@ -151,3 +151,4 @@ proxy.ts         Oturum yenileme ve route koruması (Next.js 16 proxy kuralı)
 
 Açık ve koyu mod desteklenir; tercih `localStorage`'da saklanır. Renk paleti
 mavi-mor gradient ağırlıklıdır (`#6366F1` → `#8B5CF6`).
+
